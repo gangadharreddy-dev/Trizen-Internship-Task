@@ -1,5 +1,7 @@
 # 📸 PhotoShare
 <img width="1470" height="956" alt="Screenshot 2026-09-09 at 7 05 32 PM" src="https://github.com/user-attachments/assets/be457a3a-33b3-4ffe-9830-dbe433cf2b20" />
+<img width="2940" height="1912" alt="image" src="https://github.com/user-attachments/assets/ea4b7249-6ee2-4543-991d-936e0c833e16" />
+
 
 
 ### Full-Stack Photography Team & Client Gallery Platform
@@ -13,7 +15,8 @@ The platform provides separate access for **Admins, Team Members, and Customers*
 # ✨ Features
 
 ## 👨‍💼 Admin
-<img width="1470" height="956" alt="Screenshot 2026-09-09 at 7 05 59 PM" src="https://github.com/user-attachments/assets/432705e8-3098-47ee-a33b-760b5ddf469f" />
+<img width="2940" height="1912" alt="image" src="https://github.com/user-attachments/assets/441c8ecf-cdad-4be8-8dca-8ccbd72115c2" />
+
 
 
 * Register and login
