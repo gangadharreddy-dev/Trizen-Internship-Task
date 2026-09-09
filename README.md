@@ -1,4 +1,6 @@
 # 📸 PhotoShare
+<img width="1470" height="956" alt="Screenshot 2026-09-09 at 7 05 32 PM" src="https://github.com/user-attachments/assets/be457a3a-33b3-4ffe-9830-dbe433cf2b20" />
+
 
 ### Full-Stack Photography Team & Client Gallery Platform
 
@@ -11,6 +13,8 @@ The platform provides separate access for **Admins, Team Members, and Customers*
 # ✨ Features
 
 ## 👨‍💼 Admin
+<img width="1470" height="956" alt="Screenshot 2026-09-09 at 7 05 59 PM" src="https://github.com/user-attachments/assets/432705e8-3098-47ee-a33b-760b5ddf469f" />
+
 
 * Register and login
 * Create and manage events
@@ -24,6 +28,8 @@ The platform provides separate access for **Admins, Team Members, and Customers*
 * Set gallery PINs
 
 ## 📸 Team Member
+<img width="1470" height="956" alt="Screenshot 2026-09-09 at 7 06 22 PM" src="https://github.com/user-attachments/assets/00beb810-8f44-41fd-a26a-8e447433774e" />
+
 
 * Secure login
 * View assigned events
@@ -34,6 +40,8 @@ The platform provides separate access for **Admins, Team Members, and Customers*
 * Cannot manage other users' photos
 
 ## 👤 Customer
+<img width="2940" height="1912" alt="image" src="https://github.com/user-attachments/assets/a59ac041-bc29-4e78-849a-eb2aa4d94ff0" />
+
 
 * No account required
 * Access gallery through a shareable link
@@ -224,7 +232,7 @@ npm run dev
 ## Frontend
 
 ```text
-http://localhost:5173
+https://photoshare-frontend.onrender.com/team/dashboard
 ```
 
 ---
