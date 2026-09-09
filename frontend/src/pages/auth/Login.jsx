@@ -54,13 +54,13 @@ export const Login = () => {
       />
 
       {/* ── Multi-Layer Dark Vignette & Atmospheric Glow ── */}
-      <div className="absolute inset-0 bg-black/55 backdrop-blur-[2px]" />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/80" />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/45 to-black/85" />
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background: `
-            radial-gradient(circle at 50% 20%, rgba(225, 29, 72, 0.18) 0%, transparent 60%),
+            radial-gradient(circle at 50% 20%, rgba(37, 99, 235, 0.16) 0%, transparent 60%),
             radial-gradient(circle at 50% 80%, rgba(245, 158, 11, 0.12) 0%, transparent 60%)
           `,
         }}
@@ -68,11 +68,11 @@ export const Login = () => {
 
       {/* ── Floating Centered Glassmorphism Card ── */}
       <div className="relative z-10 w-full max-w-md my-auto">
-        <div className="bg-slate-950/70 backdrop-blur-2xl border border-white/15 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-black/80 text-white transition-all duration-300">
+        <div className="bg-slate-950/75 backdrop-blur-2xl border border-white/15 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-black/90 text-white transition-all duration-300">
           
           {/* Brand Header */}
           <div className="text-center space-y-2 mb-6">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-rose-700 via-rose-600 to-amber-500 border border-white/20 shadow-lg shadow-rose-950/50 mb-1">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-slate-900 via-blue-600 to-amber-400 border border-white/20 shadow-lg shadow-blue-950/60 mb-1">
               <Camera className="w-7 h-7 text-white stroke-[1.75]" />
             </div>
 
@@ -80,14 +80,14 @@ export const Login = () => {
               PhotoShare
             </h1>
 
-            <p className="text-xs text-rose-200/80 font-medium tracking-wide">
+            <p className="text-xs text-slate-300 font-medium tracking-wide">
               Welcome Back • Sign in to your account
             </p>
           </div>
 
           {/* Quick Demo Credentials */}
           <div className="mb-5 p-3 rounded-2xl bg-white/5 border border-white/10 space-y-2 backdrop-blur-md">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-rose-300/80 text-center">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-amber-300/90 text-center">
               ⚡ Quick Demo Credentials
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -132,7 +132,7 @@ export const Login = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
-                  className="w-full bg-black/30 border border-white/15 rounded-xl pl-10 pr-3.5 py-2.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400 transition-all"
+                  className="w-full bg-black/30 border border-white/15 rounded-xl pl-10 pr-3.5 py-2.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-all"
                 />
               </div>
             </div>
@@ -149,7 +149,7 @@ export const Login = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full bg-black/30 border border-white/15 rounded-xl pl-10 pr-3.5 py-2.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400 transition-all"
+                  className="w-full bg-black/30 border border-white/15 rounded-xl pl-10 pr-3.5 py-2.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-all"
                 />
               </div>
             </div>
@@ -168,7 +168,7 @@ export const Login = () => {
               <button
                 type="button"
                 onClick={() => alert('For demo, click one of the quick credential buttons above or register.')}
-                className="text-rose-300 hover:text-rose-200 font-medium transition-colors"
+                className="text-amber-300 hover:text-amber-200 font-medium transition-colors"
               >
                 Forgot password?
               </button>
@@ -194,7 +194,7 @@ export const Login = () => {
           <div className="text-center pt-5 mt-5 border-t border-white/10">
             <p className="text-xs text-slate-400">
               Don't have an account?{' '}
-              <Link to="/register" className="text-rose-300 hover:text-rose-200 font-semibold transition-colors">
+              <Link to="/register" className="text-amber-300 hover:text-amber-200 font-semibold transition-colors">
                 Register
               </Link>
             </p>
