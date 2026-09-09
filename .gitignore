@@ -1,0 +1,29 @@
+# Python
+venv/
+**/venv/
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+**/.pytest_cache/
+*.db
+**/*.db
+uploads/
+**/uploads/
+
+# Node
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+
+# Environment secrets
+.env
+**/.env
+
+# OS & Editors
+.DS_Store
+**/.DS_Store
+.vscode/
+

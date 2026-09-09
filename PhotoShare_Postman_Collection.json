@@ -1,0 +1,171 @@
+{
+  "info": {
+    "name": "PhotoShare API Collection",
+    "description": "Postman collection covering Authentication, Events, Photos, Galleries, and Customer PIN Access.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000/api",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "memberToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "customerSessionToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Admin Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@photoshare.com\",\n  \"password\": \"AdminPassword123!\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Team Member Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"sam@photoshare.com\",\n  \"password\": \"TeamPassword123!\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Current User Profile",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": { "raw": "{{baseUrl}}/auth/me", "host": ["{{baseUrl}}"], "path": ["auth", "me"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Events",
+      "item": [
+        {
+          "name": "List Events",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": { "raw": "{{baseUrl}}/events", "host": ["{{baseUrl}}"], "path": ["events"] }
+          }
+        },
+        {
+          "name": "Create Event (Admin only)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Priya & Rohan Sangeet Night\",\n  \"description\": \"Grand ballroom sangeet ceremony with live performances and lighting.\",\n  \"event_date\": \"2026-10-15T18:30:00Z\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/events", "host": ["{{baseUrl}}"], "path": ["events"] }
+          }
+        },
+        {
+          "name": "Assign Team Member to Event",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"sam@photoshare.com\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/events/1/members", "host": ["{{baseUrl}}"], "path": ["events", "1", "members"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Photos",
+      "item": [
+        {
+          "name": "Get Event Photos",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": { "raw": "{{baseUrl}}/events/1/photos", "host": ["{{baseUrl}}"], "path": ["events", "1", "photos"] }
+          }
+        },
+        {
+          "name": "Curate / Select Photos (Admin only)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"photo_ids\": [1, 2, 3, 4, 5],\n  \"is_selected\": true\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/events/1/photos/selection", "host": ["{{baseUrl}}"], "path": ["events", "1", "photos", "selection"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customer Gallery & PIN Access",
+      "item": [
+        {
+          "name": "Get Public Gallery Info (No Auth)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/gallery/abc123/info", "host": ["{{baseUrl}}"], "path": ["gallery", "abc123", "info"] }
+          }
+        },
+        {
+          "name": "Verify Customer PIN (PIN: 482917)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pin\": \"482917\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/gallery/abc123/verify", "host": ["{{baseUrl}}"], "path": ["gallery", "abc123", "verify"] }
+          }
+        },
+        {
+          "name": "Get Published Customer Photos",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-Gallery-Token", "value": "{{customerSessionToken}}" }],
+            "url": { "raw": "{{baseUrl}}/gallery/abc123/photos", "host": ["{{baseUrl}}"], "path": ["gallery", "abc123", "photos"] }
+          }
+        }
+      ]
+    }
+  ]
+}
