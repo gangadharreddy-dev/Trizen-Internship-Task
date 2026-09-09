@@ -18,9 +18,12 @@ import {
   X,
   Eye,
   Lock,
-  HardDrive
+  HardDrive,
+  AlertCircle,
+  UploadCloud
 } from 'lucide-react';
 import { PhotoModal } from '../../components/PhotoModal';
+import { UploadZone } from '../../components/UploadZone';
 
 export const EventDetails = () => {
   const { id } = useParams();
@@ -50,6 +53,26 @@ export const EventDetails = () => {
   const [pinInput, setPinInput] = useState('482917');
   const [copyLinkDone, setCopyLinkDone] = useState(false);
   const [copyPinDone, setCopyPinDone] = useState(false);
+
+  // Upload Modal & Broken Photos Tracking
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [brokenPhotos, setBrokenPhotos] = useState(new Set());
+
+  const handleDeletePhoto = async (photoId, e) => {
+    if (e) e.stopPropagation();
+    if (!window.confirm('Are you sure you want to delete this photo?')) return;
+    try {
+      await api.delete(`/api/photos/${photoId}`);
+      setPhotos((prev) => prev.filter((p) => p.id !== photoId));
+      setSelectedPhotoIds((prev) => {
+        const next = new Set(prev);
+        next.delete(photoId);
+        return next;
+      });
+    } catch (err) {
+      alert('Failed to delete photo: ' + (err.response?.data?.detail || err.message));
+    }
+  };
 
   const fetchAll = async () => {
     try {
@@ -374,7 +397,7 @@ export const EventDetails = () => {
       {activeTab === 'photos' && (
         <div className="space-y-4 pb-20">
           {/* Header row with counts */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h2 className="text-sm font-bold text-slate-900">All Event Photos</h2>
               <p className="text-xs text-slate-500">{event.name}</p>
@@ -384,6 +407,14 @@ export const EventDetails = () => {
               <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200">
                 {selectedPhotoIds.size} selected
               </span>
+              <button
+                type="button"
+                onClick={() => setShowUploadModal(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors ml-2"
+              >
+                <UploadCloud className="w-3.5 h-3.5" />
+                <span>Upload Photos</span>
+              </button>
             </div>
           </div>
 
@@ -417,51 +448,69 @@ export const EventDetails = () => {
           {/* Photo Grid matching Screen 7 */}
           {filteredPhotos.length === 0 ? (
             <div className="bg-white border border-slate-200 rounded-xl p-12 text-center text-xs text-slate-400">
-              No photos found.
+              No photos found. Click "Upload Photos" above to add pictures.
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
               {filteredPhotos.map((photo) => {
                 const isSelected = selectedPhotoIds.has(photo.id);
+                const isBroken = brokenPhotos.has(photo.id);
                 return (
                   <div
                     key={photo.id}
-                    onClick={() => togglePhoto(photo.id)}
-                    className={`relative group rounded-xl overflow-hidden cursor-pointer border aspect-square shadow-xs transition-all ${
+                    onClick={() => setActiveModalPhoto(photo)}
+                    className={`relative group rounded-xl overflow-hidden cursor-pointer border aspect-square shadow-xs transition-all bg-slate-50 ${
                       isSelected
                         ? 'ring-2 ring-blue-600 border-blue-600'
                         : 'border-slate-200 hover:border-slate-400'
                     }`}
                   >
-                    <img
-                      src={getPhotoUrl(photo.storage_location)}
-                      alt={photo.filename}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
+                    {isBroken ? (
+                      <div className="w-full h-full flex flex-col items-center justify-center p-3 text-center bg-slate-100/80">
+                        <AlertCircle className="w-6 h-6 text-amber-500 mb-1 shrink-0" />
+                        <span className="text-[11px] font-semibold text-slate-700 truncate w-full px-1">
+                          {photo.filename}
+                        </span>
+                        <span className="text-[10px] text-amber-600 font-medium mt-0.5">
+                          File missing (re-upload)
+                        </span>
+                      </div>
+                    ) : (
+                      <img
+                        src={getPhotoUrl(photo.storage_location)}
+                        alt={photo.filename}
+                        onError={() => setBrokenPhotos((prev) => new Set(prev).add(photo.id))}
+                        className="w-full h-full object-cover"
+                      />
+                    )}
 
                     {/* Top right select check badge */}
-                    <div className="absolute top-2 right-2">
-                      <div
-                        className={`w-5 h-5 rounded flex items-center justify-center transition-all ${
+                    <div className="absolute top-2 right-2 z-10">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          togglePhoto(photo.id);
+                        }}
+                        className={`w-6 h-6 rounded flex items-center justify-center transition-all ${
                           isSelected
                             ? 'bg-blue-600 text-white shadow-sm'
-                            : 'bg-black/40 border border-white/60 text-transparent hover:text-white/50'
+                            : 'bg-black/40 border border-white/60 text-transparent hover:text-white/60'
                         }`}
+                        title={isSelected ? 'Deselect photo' : 'Select photo'}
                       >
                         <Check className="w-3.5 h-3.5 stroke-[3]" />
-                      </div>
+                      </button>
                     </div>
 
-                    {/* Preview eye icon on hover */}
+                    {/* Delete button on hover */}
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setActiveModalPhoto(photo);
-                      }}
-                      className="absolute top-2 left-2 p-1 rounded-md bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                      title="Preview"
+                      type="button"
+                      onClick={(e) => handleDeletePhoto(photo.id, e)}
+                      className="absolute top-2 left-2 p-1.5 rounded-md bg-rose-600/90 hover:bg-rose-600 text-white opacity-0 group-hover:opacity-100 transition-opacity z-10 shadow-sm"
+                      title="Delete photo"
                     >
-                      <Eye className="w-3.5 h-3.5" />
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 );
@@ -857,6 +906,35 @@ export const EventDetails = () => {
           photo={activeModalPhoto}
           onClose={() => setActiveModalPhoto(null)}
         />
+      )}
+
+      {/* Upload Photos Modal */}
+      {showUploadModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">Upload Photos</h3>
+                <p className="text-xs text-slate-500 mt-0.5">{event?.name}</p>
+              </div>
+              <button
+                onClick={() => setShowUploadModal(false)}
+                className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-6">
+              <UploadZone
+                eventId={id}
+                onUploadComplete={(newPhotos) => {
+                  setPhotos((prev) => [...(newPhotos || []), ...prev]);
+                  setShowUploadModal(false);
+                }}
+              />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
