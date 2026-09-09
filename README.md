@@ -1,328 +1,1043 @@
-# 📸 PhotoShare — Production-Ready Photography Team & Client Gallery Platform
+# 📸 PhotoShare
 
-**PhotoShare** is a specialized, production-ready full-stack photography platform engineered for photography teams, studios, and their clients. It provides a seamless collaborative workflow:
+### Full-Stack Photography Team & Client Gallery Platform
 
-$$\text{Admin creates Event} \longrightarrow \text{Assigns Team Members} \longrightarrow \text{Shooters Upload Photos} \longrightarrow \text{Admin Curates \& Selects} \longrightarrow \text{Publishes Private Gallery with PIN} \longrightarrow \text{Client Views Photos}$$
+PhotoShare is a full-stack web application designed for photography teams, studios, and event photographers to collaboratively upload, organize, curate, and securely share event photographs with clients.
 
-> 🔒 **Zero-Friction Client Experience**: Customers **never** need to create an account or remember passwords. They simply open their unique shareable link (e.g. `/gallery/abc123`), enter their secure 6-digit access PIN (e.g. `482917`), and browse their curated high-resolution photos in a responsive photography gallery.
+The platform provides a complete workflow:
 
----
+**Admin creates an event → Assigns team members → Team members upload photos → Admin reviews and selects photos → Admin publishes a private gallery → Customer accesses the gallery using a shareable link and PIN.**
 
-## 🏗️ System Architecture
-
-```
-┌────────────────────────────────────────────────────────┐
-│               React Frontend (Vite + Tailwind)         │
-│  - Admin Studio Dashboard & Photo Curation Grid        │
-│  - Team Multi-Photo Drag-and-Drop Batch Uploader       │
-│  - Client Private Gallery Lightbox & Download Hub      │
-└───────────────────────────┬────────────────────────────┘
-                            │ REST API (JSON / Multipart)
-                            │ Bearer JWT / Scoped Gallery Token
-                            ▼
-┌────────────────────────────────────────────────────────┐
-│                 FastAPI Backend (Python)               │
-│  - Role-Based Access Control (Admin vs Team Member)    │
-│  - bcrypt Hashing (Passwords & Gallery PINs)           │
-│  - Scoped Customer Gallery Session Generation          │
-│  - Cloud Storage Adapter (Cloudinary / Local Fallback) │
-└─────────────┬────────────────────────────┬─────────────┘
-              │                            │
-   SQLAlchemy │ ORM Metadata    Direct Upload │ / Storage URL
-              ▼                            ▼
-┌──────────────────────────┐  ┌──────────────────────────┐
-│   PostgreSQL Database    │  │   Cloud Object Storage   │
-│  - Users & Roles         │  │       (Cloudinary)       │
-│  - Events & Memberships  │  │  - Raw & Optimized Images│
-│  - Photo Metadata & Flag │  │  - High-Speed CDN URLs   │
-│  - Galleries & PIN Hashes│  │  - Scalable Media Bucket │
-└──────────────────────────┘  └──────────────────────────┘
-```
+Customers do not need to create an account.
 
 ---
 
-## 🛠️ Technology Stack & Rationale
+## ✨ Features
 
-| Layer | Technology | Why It Was Chosen |
-| :--- | :--- | :--- |
-| **Frontend** | React 18 + Vite | Lightning-fast HMR, sub-second production builds, standard modern SPA ecosystem. |
-| **Styling** | Tailwind CSS v4 | High-performance modern utility styling, elegant dark photography studio aesthetics. |
-| **Routing** | React Router v7 | Declarative role-protected routes, parameter-based customer gallery links. |
-| **HTTP Client**| Axios | Built-in request/response interceptors for seamless JWT attachment and error handling. |
-| **Backend** | Python + FastAPI | Asynchronous performance, automatic OpenAPI `/docs` generation, strict Pydantic validation. |
-| **ORM & DB** | SQLAlchemy 2.0 + PostgreSQL | Enterprise relational integrity, foreign key cascades, transaction safety, connection pooling. |
-| **Auth & PIN** | JWT + bcrypt | Industry-standard password and gallery PIN encryption with zero plain-text storage. |
-| **Storage** | Cloudinary / Local Fallback | Cloud-scale asset storage, transformation support, CDN delivery without bloating the database. |
-| **Testing** | Pytest + TestClient | Automated coverage of authorization, role isolation, upload constraints, and PIN flows. |
-| **Deployment**| Render | Blueprint-driven (`render.yaml`) deployment with automated PostgreSQL provisioning and HTTPS. |
+### 👨‍💼 Admin / Lead
+
+* Register and log in securely
+* Create and manage photography events
+* Add and remove team members from events
+* View all photographs uploaded for an event
+* Review photographs uploaded by different team members
+* Select and deselect photographs for publication
+* View the number of selected and uploaded photographs
+* Create and publish a customer gallery
+* Generate a unique shareable gallery URL
+* Configure a gallery access PIN
+* Control gallery publishing status
+
+### 📸 Team Member
+
+* Secure login
+* View only assigned events
+* Upload multiple photographs
+* View uploaded photographs
+* View their own uploaded photo library
+* Upload validation and error handling
+
+Team members cannot:
+
+* Access unassigned events
+* Publish galleries
+* Manage other users' photographs
+* Perform Admin-only operations
+
+### 👤 Customer
+
+Customers do not require an account.
+
+They can:
+
+1. Open the shared gallery URL
+2. Enter the gallery PIN
+3. Access the published gallery
+4. Browse the selected photographs
+
+Customers cannot access unpublished or unselected photographs.
 
 ---
 
-## 👥 User Roles & Access Control
+# 🔄 Application Workflow
 
-### 1. 🛡️ Admin / Lead Photographer
-* Register & log in to the administrative command center.
-* Create and manage photography projects/events.
-* Assign and remove team members (second shooters, drone operators, assistants) to specific events.
-* Review all photos uploaded across all shooters for any event.
-* **Curate Deliverables**: Select/deselect photos individually or in bulk with live selection counter (e.g. `600 selected of 1250 uploaded`).
-* Configure gallery access: generate unique public token and set a secure numeric/alphanumeric PIN.
-* Publish/unpublish galleries and copy shareable client links.
-
-### 2. 📷 Team Member / Second Shooter
-* Log in and view **only** events they are assigned to.
-* Batch upload multiple photos with drag-and-drop, progress tracking, and file validation.
-* Inspect all photos within their assigned shoots and review their personal uploaded library (`/team/my-photos`).
-* **Strictly Restricted**: Cannot access unassigned events, cannot publish galleries, cannot modify other users' photos, and cannot create events.
-
-### 3. 🌟 Customer / Client
-* **No registration or account creation required.**
-* Receives a private gallery URL (`/gallery/{public_token}`) and 6-digit access PIN.
-* Unlocks the gallery with their PIN. The backend validates the bcrypt hash and issues a scoped, time-limited gallery token.
-* Browses responsive masonry grid, views full-resolution photos in a lightbox, and downloads images.
-* **Strictly Restricted**: Cannot view unpublished galleries or unselected/raw photos.
-
----
-
-## 🗄️ Database Architecture & Relationships
-
-```mermaid
-erDiagram
-    USERS ||--o{ EVENTS : creates
-    USERS ||--o{ EVENT_MEMBERS : assigned_to
-    USERS ||--o{ PHOTOS : uploads
-    EVENTS ||--o{ EVENT_MEMBERS : includes
-    EVENTS ||--o{ PHOTOS : contains
-    EVENTS ||--|| GALLERIES : publishes
-    GALLERIES ||--o{ GALLERY_PHOTOS : maps
-    PHOTOS ||--o{ GALLERY_PHOTOS : included_in
-
-    USERS {
-        int id PK
-        string name
-        string email UK
-        string password_hash
-        enum role "ADMIN | TEAM_MEMBER"
-        datetime created_at
-    }
-
-    EVENTS {
-        int id PK
-        string name
-        text description
-        int created_by FK
-        datetime event_date
-        datetime created_at
-    }
-
-    EVENT_MEMBERS {
-        int id PK
-        int event_id FK
-        int user_id FK
-        datetime created_at
-    }
-
-    PHOTOS {
-        int id PK
-        int event_id FK
-        int uploaded_by FK
-        string filename
-        string storage_location
-        int file_size
-        boolean is_selected
-        datetime created_at
-    }
-
-    GALLERIES {
-        int id PK
-        int event_id FK,UK
-        string public_token UK
-        string pin_hash
-        boolean published
-        datetime created_at
-    }
-
-    GALLERY_PHOTOS {
-        int gallery_id PK,FK
-        int photo_id PK,FK
-        datetime added_at
-    }
+```text
+                    ┌─────────────────────┐
+                    │       ADMIN         │
+                    │                     │
+                    │ Create Event        │
+                    │ Add Team Members    │
+                    └──────────┬──────────┘
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │    TEAM MEMBERS     │
+                    │                     │
+                    │ Upload Photos       │
+                    └──────────┬──────────┘
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │    PHOTO STORAGE    │
+                    │                     │
+                    │ Cloud Object Store  │
+                    └──────────┬──────────┘
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │       ADMIN         │
+                    │                     │
+                    │ Review Photos       │
+                    │ Select Photos       │
+                    │ Publish Gallery     │
+                    └──────────┬──────────┘
+                               │
+                         Gallery URL
+                              +
+                             PIN
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │      CUSTOMER       │
+                    │                     │
+                    │ Enter PIN           │
+                    │ Browse Gallery      │
+                    └─────────────────────┘
 ```
 
-### Key Relational Constraints
-* `users.email`: Unique index preventing duplicate accounts.
-* `event_members`: Unique constraint on `(event_id, user_id)` preventing duplicate assignments.
-* `galleries.event_id`: Unique foreign key ensuring one primary gallery per event.
-* `galleries.public_token`: Unique index for URL generation (`/gallery/{token}`).
-* `gallery_photos`: Composite primary key `(gallery_id, photo_id)` mapping curated photos to published galleries.
-* **No Binary in DB**: Images are stored in Cloudinary; only the secure CDN URL and metadata (size, filename, dimensions) are recorded in PostgreSQL.
+---
+
+# 🏗️ System Architecture
+
+```text
+┌──────────────────────────────────────────────────────────┐
+│                    React Frontend                        │
+│                 React + Vite + Tailwind                 │
+│                                                          │
+│  Admin Dashboard    Team Dashboard    Customer Gallery  │
+└────────────────────────────┬─────────────────────────────┘
+                             │
+                         REST API
+                             │
+                             ▼
+┌──────────────────────────────────────────────────────────┐
+│                   FastAPI Backend                        │
+│                       Python                             │
+│                                                          │
+│ Authentication | Authorization | Events | Photos         │
+│ Gallery Management | PIN Verification | Validation       │
+└───────────────┬──────────────────────────┬───────────────┘
+                │                          │
+                │ SQLAlchemy               │ Storage API
+                ▼                          ▼
+┌────────────────────────┐    ┌────────────────────────────┐
+│      PostgreSQL        │    │      Cloudinary             │
+│                        │    │                             │
+│ Users                  │    │ Original Images             │
+│ Events                 │    │ Optimized Images            │
+│ Event Memberships      │    │ CDN Delivery                │
+│ Photo Metadata         │    │                             │
+│ Galleries              │    │                             │
+│ Gallery Photos         │    │                             │
+└────────────────────────┘    └────────────────────────────┘
+```
+
+### Architecture Principles
+
+* RESTful backend architecture
+* Separation of frontend and backend
+* Relational database for structured application data
+* Object storage for photographs
+* Backend-enforced authorization
+* Secure authentication
+* PIN-protected customer galleries
+* Environment-based configuration
+* Deployable frontend and backend services
 
 ---
 
-## 🔐 Security Architecture
+# 🛠️ Technology Stack
 
-### 1. Password & PIN Encryption
-* Both user passwords and customer gallery PINs are encrypted using `bcrypt` (12 rounds of salt).
-* PINs are never stored in plain text, logged, or returned in API responses.
-
-### 2. Dual-Layer JWT Architecture
-* **User Tokens**: Standard Bearer JWT tokens containing `sub: user_id`, `role: ADMIN | TEAM_MEMBER`, and 24-hour expiration.
-* **Customer Gallery Session Tokens**: Scoped tokens generated **only** after entering the correct PIN for a specific gallery. These tokens contain `public_token` and `gallery_id`, preventing customers from tampering with URLs or inspecting unverified events.
-
-### 3. Backend Authorization Enforcement
-* Every endpoint verifies permissions on the server:
-  * Team members querying an event ID verify membership via `db.query(EventMember)`.
-  * Uploading photos validates that the authenticated shooter is assigned to the event.
-  * Customer photo requests require a valid, non-expired customer session token matching the public token.
-
----
-
-## 🚀 Live Demo Credentials
-
-| Role | Email | Password | Access / Scope |
-| :--- | :--- | :--- | :--- |
-| **Admin / Lead** | `admin@photoshare.com` | `AdminPassword123!` | Full control, event creation, team assignment, photo curation, gallery publishing |
-| **Team Member 1** | `sam@photoshare.com` | `TeamPassword123!` | Assigned to "Arjun & Priya Wedding", batch photo upload |
-| **Team Member 2** | `elena@photoshare.com` | `TeamPassword123!` | Assigned to "Arjun & Priya Wedding", batch photo upload |
-| **Customer Access**| *No account needed* | **PIN:** `482917` | **Demo Gallery URL**: `/gallery/abc123` |
+| Layer                | Technology         | Purpose                     |
+| -------------------- | ------------------ | --------------------------- |
+| Frontend             | React + Vite       | User interface              |
+| Styling              | Tailwind CSS       | Responsive UI               |
+| Routing              | React Router       | Client-side navigation      |
+| HTTP Client          | Axios              | API communication           |
+| Backend              | Python + FastAPI   | REST API                    |
+| Validation           | Pydantic           | Request/response validation |
+| ORM                  | SQLAlchemy         | Database interaction        |
+| Database             | PostgreSQL         | Persistent relational data  |
+| Authentication       | JWT                | User authentication         |
+| Password/PIN Hashing | bcrypt             | Secure credential hashing   |
+| Image Storage        | Cloudinary         | Object/media storage        |
+| Testing              | Pytest             | Backend testing             |
+| API Testing          | FastAPI TestClient | API test execution          |
+| Version Control      | Git + GitHub       | Source-code management      |
+| Deployment           | Render             | Cloud deployment            |
 
 ---
 
-## 💻 Local Quickstart Guide
+# 👥 User Roles & Authorization
 
-### Prerequisites
-* **Node.js** >= 18.0.0
-* **Python** >= 3.10
-* **Git**
+## Admin
 
-### 1. Clone & Setup Backend
+The Admin has full control over the event workflow.
+
+```text
+ADMIN
+ ├── Register/Login
+ ├── Create Events
+ ├── Manage Team Members
+ ├── View Event Photos
+ ├── Select Photos
+ ├── Create Gallery
+ └── Publish Gallery
+```
+
+## Team Member
+
+Team members have limited access based on event membership.
+
+```text
+TEAM MEMBER
+ ├── Login
+ ├── View Assigned Events
+ ├── Upload Photos
+ └── View Own Photos
+```
+
+## Customer
+
+Customers use a temporary gallery-access flow.
+
+```text
+CUSTOMER
+ ├── Open Gallery URL
+ ├── Enter PIN
+ └── View Published Photos
+```
+
+Authorization is enforced on the backend rather than relying only on frontend route restrictions.
+
+---
+
+# 🗄️ Database Design
+
+The application uses PostgreSQL as the primary relational database.
+
+## Users
+
+Stores Admin and Team Member accounts.
+
+```text
+users
+----------------
+id
+name
+email
+password_hash
+role
+created_at
+```
+
+## Events
+
+Stores photography events.
+
+```text
+events
+----------------
+id
+name
+created_by
+event_date
+created_at
+```
+
+## Event Members
+
+Maps Team Members to their assigned events.
+
+```text
+event_members
+----------------
+id
+event_id
+user_id
+```
+
+## Photos
+
+Stores photograph metadata.
+
+```text
+photos
+----------------
+id
+event_id
+uploaded_by
+filename
+storage_location
+file_size
+created_at
+is_selected
+```
+
+## Galleries
+
+Stores customer gallery information.
+
+```text
+galleries
+----------------
+id
+event_id
+public_token
+pin_hash
+published
+created_at
+```
+
+## Gallery Photos
+
+Maps selected photographs to a gallery.
+
+```text
+gallery_photos
+----------------
+gallery_id
+photo_id
+```
+
+### Relationships
+
+```text
+User
+ │
+ ├───────────────┐
+ │               │
+ ▼               ▼
+Events       Event Members
+ │               │
+ │               └── Team Members
+ │
+ ▼
+Photos
+ │
+ │ selected
+ ▼
+Gallery Photos
+ │
+ ▼
+Gallery
+ │
+ ▼
+Customer
+```
+
+### Database Design Principles
+
+* Unique email addresses
+* Foreign-key relationships
+* Event membership constraints
+* Unique gallery public tokens
+* Referential integrity
+* Indexed frequently queried fields
+* No binary image files stored in PostgreSQL
+
+---
+
+# 📷 Photo Storage Architecture
+
+Actual photograph files are stored using Cloudinary.
+
+PostgreSQL stores only photograph metadata.
+
+```text
+Photo Upload
+     │
+     ▼
+FastAPI
+     │
+     ├──────────────► Cloudinary
+     │                  │
+     │                  └── Image URL
+     │
+     ▼
+PostgreSQL
+     │
+     └── Photo metadata + storage URL
+```
+
+### Stored Photo Metadata
+
+* Photo ID
+* Event ID
+* Uploaded By
+* Filename
+* Storage Location
+* File Size
+* Created At
+* Selection Status
+
+This prevents the database from being unnecessarily used to store large binary image files.
+
+---
+
+# 🔐 Security
+
+Security is implemented at both the authentication and authorization levels.
+
+## Password Security
+
+User passwords are securely hashed using bcrypt.
+
+Passwords are never stored as plain text.
+
+## Gallery PIN Security
+
+Gallery PINs are securely hashed using bcrypt.
+
+The original PIN is not stored as plain text in the database.
+
+## JWT Authentication
+
+Authenticated Admin and Team Member users receive JWT access tokens.
+
+Tokens are used to authenticate protected API requests.
+
+Example:
+
+```text
+Authorization: Bearer <JWT>
+```
+
+## Backend Authorization
+
+The backend verifies:
+
+* User authentication
+* User role
+* Event membership
+* Photo ownership where applicable
+* Gallery publication state
+* Customer gallery access
+
+Frontend restrictions alone are not treated as security boundaries.
+
+---
+
+# 🔒 Access Control Examples
+
+### Team Member accessing an unassigned event
+
+```text
+Request
+   ↓
+Check authentication
+   ↓
+Check event membership
+   ↓
+Not assigned
+   ↓
+403 Forbidden
+```
+
+### Team Member attempting to publish a gallery
+
+```text
+Team Member
+     ↓
+Publish Request
+     ↓
+Backend checks role
+     ↓
+TEAM_MEMBER ≠ ADMIN
+     ↓
+403 Forbidden
+```
+
+### Customer entering incorrect PIN
+
+```text
+Gallery URL
+     ↓
+Enter PIN
+     ↓
+Verify bcrypt hash
+     ↓
+Incorrect
+     ↓
+401 Unauthorized
+```
+
+### Customer accessing unpublished photos
+
+```text
+Gallery Request
+     ↓
+Check gallery status
+     ↓
+Not published
+     ↓
+Access denied
+```
+
+---
+
+# 🌐 API Endpoints
+
+## Authentication
+
+```text
+POST   /api/auth/register
+POST   /api/auth/login
+GET    /api/auth/me
+GET    /api/auth/users
+```
+
+## Events
+
+```text
+POST   /api/events
+GET    /api/events
+GET    /api/events/{id}
+PUT    /api/events/{id}
+DELETE /api/events/{id}
+```
+
+## Event Members
+
+```text
+POST   /api/events/{id}/members
+GET    /api/events/{id}/members
+DELETE /api/events/{id}/members/{user_id}
+```
+
+## Photos
+
+```text
+POST   /api/events/{id}/photos
+GET    /api/events/{id}/photos
+GET    /api/photos/my
+PUT    /api/events/{id}/photos/selection
+DELETE /api/photos/{id}
+```
+
+## Galleries
+
+```text
+POST   /api/events/{id}/gallery
+POST   /api/galleries/{id}/publish
+GET    /api/galleries/{id}
+```
+
+## Customer Gallery
+
+```text
+GET    /api/gallery/{token}/info
+POST   /api/gallery/{token}/verify
+GET    /api/gallery/{token}/photos
+```
+
+---
+
+# 📂 Project Structure
+
+```text
+photoshare/
+│
+├── backend/
+│   ├── app/
+│   │   ├── main.py
+│   │   ├── database.py
+│   │   ├── models/
+│   │   ├── schemas/
+│   │   ├── routes/
+│   │   ├── services/
+│   │   ├── auth/
+│   │   └── storage/
+│   │
+│   ├── tests/
+│   ├── requirements.txt
+│   ├── seed_data.py
+│   └── .env.example
+│
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── services/
+│   │   ├── context/
+│   │   ├── hooks/
+│   │   └── App.jsx
+│   │
+│   ├── package.json
+│   └── .env.example
+│
+├── README.md
+├── render.yaml
+└── .gitignore
+```
+
+---
+
+# 💻 Local Development
+
+## Prerequisites
+
+Install:
+
+* Python 3.10+
+* Node.js 18+
+* Git
+* PostgreSQL
+
+---
+
+## 1. Clone Repository
+
 ```bash
-# Navigate to backend
+git clone <YOUR_GITHUB_REPOSITORY_URL>
+
+cd photoshare
+```
+
+---
+
+# Backend Setup
+
+```bash
 cd backend
-
-# Create virtual environment
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Seed the database with demo users, sample event, photos, and published gallery
-python seed_data.py
-
-# Start FastAPI development server
-uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
-API Documentation will be live at: [http://localhost:8000/docs](http://localhost:8000/docs)
 
-### 2. Setup Frontend
+Create a virtual environment:
+
 ```bash
-# In a new terminal, navigate to frontend
+python3 -m venv venv
+```
+
+Activate it:
+
+### macOS/Linux
+
+```bash
+source venv/bin/activate
+```
+
+### Windows
+
+```bash
+venv\Scripts\activate
+```
+
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+Create your environment file:
+
+```bash
+cp .env.example .env
+```
+
+Configure the required environment variables.
+
+Run the backend:
+
+```bash
+uvicorn app.main:app --reload
+```
+
+Backend:
+
+```text
+http://localhost:8000
+```
+
+API documentation:
+
+```text
+http://localhost:8000/docs
+```
+
+---
+
+# Frontend Setup
+
+Open another terminal:
+
+```bash
 cd frontend
+```
 
-# Install dependencies
+Install dependencies:
+
+```bash
 npm install
+```
 
-# Start Vite development server
+Create the environment file:
+
+```bash
+cp .env.example .env
+```
+
+Start the development server:
+
+```bash
 npm run dev
 ```
-PhotoShare Web Application will be live at: [http://localhost:5173](http://localhost:5173)
+
+Frontend:
+
+```text
+http://localhost:5173
+```
 
 ---
 
-## 🧪 Automated Testing (Pytest)
+# 🔑 Environment Variables
 
-PhotoShare includes an automated test suite verifying all 12 core requirements with an isolated in-memory test database:
+Never commit real credentials or secrets to Git.
+
+Example backend environment:
+
+```env
+DATABASE_URL=your_postgresql_connection_string
+
+JWT_SECRET=your_secure_jwt_secret
+
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+```
+
+Use `.env.example` to document required variables without exposing real values.
+
+---
+
+# ☁️ Cloudinary Setup
+
+1. Create a Cloudinary account.
+2. Obtain the Cloud Name.
+3. Obtain the API Key.
+4. Obtain the API Secret.
+5. Add the values to the backend environment variables.
+6. Restart the backend.
+
+The application uses Cloudinary for photograph storage and delivery.
+
+---
+
+# 🚀 Deployment
+
+The application is designed for deployment using Render.
+
+The deployment consists of:
+
+```text
+GitHub Repository
+       │
+       ▼
+Render
+       │
+ ┌─────┼──────────────┐
+ ▼     ▼              ▼
+Frontend Backend   PostgreSQL
+```
+
+## Deployment Steps
+
+1. Push the project to GitHub.
+2. Create a Render account.
+3. Connect the GitHub repository.
+4. Configure the frontend service.
+5. Configure the FastAPI backend service.
+6. Create/configure PostgreSQL.
+7. Add required environment variables.
+8. Configure Cloudinary credentials.
+9. Deploy the application.
+10. Verify the complete Admin → Team Member → Customer workflow.
+
+---
+
+# 🌐 Live Application
+
+> Replace the following placeholders after deployment.
+
+**Frontend:**
+`https://YOUR-FRONTEND-URL`
+
+**Backend:**
+`https://YOUR-BACKEND-URL`
+
+**API Documentation:**
+`https://YOUR-BACKEND-URL/docs`
+
+---
+
+# 🧪 Testing
+
+The backend includes automated tests using Pytest.
+
+Run:
 
 ```bash
 cd backend
-source venv/bin/activate
-pytest -v tests/test_photoshare.py
+
+pytest -v
 ```
 
-### Verified Test Cases:
-1. `test_admin_registration`: Admin registers, receives JWT and admin role.
-2. `test_login`: User authentication generates valid access tokens.
-3. `test_authentication`: Missing or invalid tokens return `401 Unauthorized`.
-4. `test_role_authorization`: Non-admins attempting admin actions return `403 Forbidden`.
-5. `test_team_member_event_access`: Assigned team members can access designated events.
-6. `test_unauthorized_event_access`: Unassigned members are blocked from other shoots (`403 Forbidden`).
-7. `test_photo_upload_authorization`: Assigned members upload successfully; outsiders are blocked.
-8. `test_gallery_publishing`: Admin selects curated photos and publishes gallery with PIN.
-9. `test_incorrect_gallery_pin`: Incorrect customer PIN returns `401 Unauthorized`.
-10. `test_correct_gallery_pin`: Correct customer PIN issues scoped session token.
-11. `test_customer_access_to_published_photos`: Verified customer retrieves published photos.
-12. `test_customer_inability_to_access_unpublished_photos`: Unpublished galleries return `404` and unverified requests return `401`.
+## Important Test Scenarios
+
+The test suite should cover:
+
+* Admin registration
+* User login
+* Invalid authentication
+* Role-based authorization
+* Team Member event access
+* Unauthorized event access
+* Photo upload authorization
+* Gallery creation
+* Gallery publishing
+* Incorrect gallery PIN
+* Correct gallery PIN
+* Customer access to published photos
+* Customer restriction from unpublished photos
+
+Example expected authorization behavior:
+
+```text
+Admin publishing gallery
+        ↓
+       200 ✅
+
+Team Member publishing gallery
+        ↓
+       403 ❌
+
+Incorrect customer PIN
+        ↓
+       401 ❌
+
+Correct customer PIN
+        ↓
+       Access granted ✅
+```
 
 ---
 
-## 🌐 Cloudinary Cloud Storage Setup
+# 👤 Demo Credentials
 
-1. Sign up for a free account at [Cloudinary.com](https://cloudinary.com).
-2. Obtain your **Cloud Name**, **API Key**, and **API Secret** from the Cloudinary Console Dashboard.
-3. Update `backend/.env`:
-   ```env
-   CLOUDINARY_CLOUD_NAME="your_cloud_name"
-   CLOUDINARY_API_KEY="your_api_key"
-   CLOUDINARY_API_SECRET="your_api_secret"
-   ```
-4. If credentials are left blank, PhotoShare automatically falls back to secure local file storage served via `/uploads`, allowing development and offline testing without cloud credentials.
+> Replace these values with the credentials of your actual deployed demo accounts.
 
----
+### Admin
 
-## ☁️ Deployment Instructions (Render)
+```text
+Email:    YOUR_ADMIN_EMAIL
+Password: YOUR_ADMIN_PASSWORD
+Role:     Admin
+```
 
-PhotoShare includes a ready-to-deploy `render.yaml` blueprint.
+### Team Member
 
-### One-Click Blueprint Deployment:
-1. Push this repository to GitHub.
-2. Go to the [Render Dashboard](https://dashboard.render.com).
-3. Click **New +** → **Blueprint**.
-4. Connect your GitHub repository.
-5. Render will automatically detect `render.yaml` and provision:
-   * **`photoshare-db`**: Free Managed PostgreSQL Instance.
-   * **`photoshare-backend`**: Python FastAPI Web Service.
-   * **`photoshare-frontend`**: Static Site hosting the compiled React + Vite bundle with client-side SPA routing.
-6. In the Render Dashboard under `photoshare-backend`, add your Cloudinary environment variables (`CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`).
-7. Once deployment finishes, access your live URL!
+```text
+Email:    YOUR_TEAM_MEMBER_EMAIL
+Password: YOUR_TEAM_MEMBER_PASSWORD
+Role:     Team Member
+```
 
----
+### Customer
 
-## 📮 API Endpoints Reference
+No account is required.
 
-### Authentication
-* `POST /api/auth/register` — Register Admin or Team Member.
-* `POST /api/auth/login` — Authenticate and receive JWT Bearer token.
-* `GET /api/auth/me` — Retrieve current authenticated user profile.
-* `GET /api/auth/users` — Admin lists team members to assign to events.
+```text
+Gallery URL:
+https://YOUR-DOMAIN/gallery/YOUR_PUBLIC_TOKEN
 
-### Events
-* `POST /api/events` — Admin creates a new photography event.
-* `GET /api/events` — List events (Admin views all; Team Members view assigned).
-* `GET /api/events/{id}` — Retrieve event details and metrics.
-* `PUT /api/events/{id}` — Admin updates event info.
-* `DELETE /api/events/{id}` — Admin deletes event and associated media.
-* `POST /api/events/{id}/members` — Admin assigns a team member.
-* `GET /api/events/{id}/members` — View assigned shooters.
-* `DELETE /api/events/{id}/members/{user_id}` — Admin unassigns a member.
+PIN:
+YOUR_DEMO_PIN
+```
 
-### Photos
-* `POST /api/events/{id}/photos` — Multi-photo batch upload (Assigned shooter or Admin).
-* `GET /api/events/{id}/photos` — View all photos uploaded to the event.
-* `GET /api/photos/my` — Team member views their own uploaded portfolio.
-* `PUT /api/events/{id}/photos/selection` — Admin curates/selects photos for customer delivery.
-* `DELETE /api/photos/{id}` — Delete photo (Admin or uploading shooter).
-
-### Galleries & Customer Access
-* `POST /api/events/{id}/gallery` — Admin configures gallery and sets bcrypt PIN.
-* `POST /api/galleries/{id}/publish` — Admin toggles publishing state (syncs selected photos).
-* `GET /api/galleries/{id}` — Admin inspects gallery status and shareable link.
-* `GET /api/gallery/{token}/info` — Customer checks public event title before entering PIN.
-* `POST /api/gallery/{token}/verify` — Customer enters PIN; receives scoped session token.
-* `GET /api/gallery/{token}/photos` — Customer retrieves curated published photos.
+**Never commit production credentials, API keys, database passwords, or secrets to the repository.**
 
 ---
 
-## ⚠️ Known Limitations
-* **Direct RAW File Support**: Currently supports standard web-deliverable image formats (JPEG, PNG, WebP, GIF up to 25MB per file). Proprietary camera RAW files (.CR3, .ARW, .NEF) should be converted to high-res JPEG/WebP prior to client gallery delivery.
-* **Storage Provider**: Primary cloud storage configured for Cloudinary; S3 adapter can be added by implementing the storage interface.
+# 📊 Example Operational Flow
+
+Example event:
+
+```text
+Event:
+Arjun & Priya Wedding
+
+Uploaded Photos:
+1,250
+
+Selected Photos:
+600
+
+Gallery:
+https://YOUR-DOMAIN/gallery/abc123
+
+PIN:
+482917
+```
+
+Workflow:
+
+```text
+Admin creates event
+        ↓
+Adds photographers
+        ↓
+Photographers upload 1,250 photos
+        ↓
+Admin reviews photos
+        ↓
+Admin selects 600 photos
+        ↓
+Admin publishes gallery
+        ↓
+Customer receives URL + PIN
+        ↓
+Customer enters PIN
+        ↓
+Customer views 600 published photos
+```
+
+---
+
+# 🎯 Design Goals
+
+PhotoShare focuses on:
+
+### Reliability
+
+Core workflows should function consistently from upload to customer delivery.
+
+### Security
+
+Authentication and authorization are enforced on the backend.
+
+### Maintainability
+
+The application separates frontend, backend, database, authentication, storage, and business logic.
+
+### Usability
+
+The interface is designed to be simple for photographers and customers.
+
+### Scalability
+
+Object storage is used for photographs while PostgreSQL manages structured metadata.
+
+---
+
+# ⚠️ Known Limitations
+
+The following limitations depend on the current implementation:
+
+* Initial versions may focus on standard web image formats such as JPEG, PNG, and WebP.
+* Professional camera RAW formats such as CR3, ARW, and NEF may require conversion before client delivery.
+* Advanced CDN optimization may depend on the configured storage provider.
+* Additional enterprise features such as advanced audit logging, gallery expiration, and automated CI/CD can be added in future iterations.
+
+Only features implemented in the deployed version should be considered part of the current production workflow.
+
+---
+
+# ⭐ Future Enhancements
+
+Potential future improvements include:
+
+* Image thumbnails and automatic resizing
+* Pagination and infinite scrolling
+* Advanced photo search and filtering
+* Bulk photo management
+* Customer photo downloads
+* Gallery expiration
+* CDN optimization
+* Email gallery invitations
+* Gallery analytics
+* Activity/audit logs
+* Automated CI/CD
+* Automated image moderation
+* Advanced event management
+
+These enhancements should be added without compromising the core application workflow.
+
+---
+
+# 📋 Internship Challenge Requirement Coverage
+
+| Requirement              | Implementation |
+| ------------------------ | -------------- |
+| Admin Registration/Login | ✅              |
+| Event Creation           | ✅              |
+| Team Member Assignment   | ✅              |
+| Team Member Login        | ✅              |
+| Assigned Event Access    | ✅              |
+| Multiple Photo Upload    | ✅              |
+| Cloud/Object Storage     | ✅              |
+| Photo Metadata           | ✅              |
+| Admin Photo Review       | ✅              |
+| Photo Selection          | ✅              |
+| Gallery Creation         | ✅              |
+| Gallery Publishing       | ✅              |
+| Shareable Gallery Link   | ✅              |
+| PIN-Protected Gallery    | ✅              |
+| Customer Without Account | ✅              |
+| Role-Based Authorization | ✅              |
+| Input Validation         | ✅              |
+| Error Handling           | ✅              |
+| Cloud Deployment         | ✅              |
+| README Documentation     | ✅              |
+| Automated Tests          | ✅              |
+
+---
+
+# 🧑‍💻 Development Philosophy
+
+The project prioritizes:
+
+```text
+Simple Architecture
+        +
+Clear Code
+        +
+Secure Access Control
+        +
+Reliable Core Features
+        +
+Good Documentation
+        =
+Maintainable Full-Stack Application
+```
+
+The implementation is intentionally designed to remain understandable and explainable during technical evaluation.
+
+---
+
+# 📄 License
+
+This project was developed as a Full-Stack Internship Challenge submission.
+
+---
+
+# 👨‍💻 Author
+
+**Gangadhar Reddy**
+
+Full-Stack / AI & Data Science Student
+
+GitHub:
+`<YOUR_GITHUB_PROFILE_URL>`
+
+LinkedIn:
+`<YOUR_LINKEDIN_PROFILE_URL>`
