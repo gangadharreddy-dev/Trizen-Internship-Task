@@ -64,6 +64,46 @@ https://photoshare-backend-ieke.onrender.com/docs
 * Cannot access unpublished galleries
 
 ---
+# 🔑 PhotoShare Demo Accounts
+
+These accounts are provided for evaluation and demonstration of the PhotoShare application.
+
+## 👨‍💼 Admin Account
+
+| Role | Email | Password |
+|---|---|---|
+| Admin | `gangadharreddy065@gmail.com` | `naniachu2` |
+
+## 📸 Photographer Accounts
+
+| Photographer | Role | Email | Password |
+|---|---|---|---|
+| Kunal | Photographer | `Kunal@photoshare.com` | `photographer@123` |
+| Shannu | Photographer | `Shannu@photoshare.com` | `photographer@123` |
+| Rakshith | Photographer | `rakshith@photoshare.com` | `photographer@123` |
+
+## 🌐 Application Links
+
+**Frontend:**  
+https://photoshare-frontend-195k.onrender.com/
+
+**Backend:**  
+https://photoshare-backend-ieke.onrender.com/
+
+**API Documentation:**  
+https://photoshare-backend-ieke.onrender.com/docs
+
+## 🔄 Demo Workflow
+
+1. Login as **Admin**.
+2. Create or manage an event.
+3. Assign a photographer to the event.
+4. Login using the assigned **Photographer** account.
+5. Upload photographs for the assigned event.
+6. Verify the uploaded photos in the gallery.
+7. Test the customer gallery workflow.
+
+> These credentials are provided for evaluation and demonstration purposes.
 
 # 🔄 Application Workflow
 
@@ -182,21 +222,6 @@ Each uploaded photo stores information such as:
 
 ---
 
-# 🌐 Live Application
-
-## Frontend
-
-https://photoshare-frontend.onrender.com
-
-## Backend API
-
-https://photoshare-backend-ieke.onrender.com
-
-## API Documentation
-
-https://photoshare-backend-ieke.onrender.com/docs
-
----
 
 # 🚀 Local Setup
 
