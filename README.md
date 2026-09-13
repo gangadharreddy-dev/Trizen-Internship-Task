@@ -11,17 +11,6 @@ The platform provides separate access for **Admins, Team Members, and Customers*
 
 ---
 
-## 🌐 Live Demo
-
-### Frontend
-https://photoshare-frontend-195k.onrender.com/
-
-### Backend API
-https://photoshare-backend-ieke.onrender.com/
-
-### API Documentation
-https://photoshare-backend-ieke.onrender.com/docs
-
 # ✨ Features
 
 
