@@ -63,25 +63,6 @@ https://photoshare-backend-ieke.onrender.com/docs
 * View published photos only
 * Cannot access unpublished galleries
 
-## ☁️ Cloud Image Storage
-
-- Cloudinary integration for image storage
-- Secure image URLs
-- Supports JPG, JPEG, PNG, WEBP, and GIF
-- Maximum upload size of 25 MB per image
-- Automatic unique image handling
-
-## 🔐 Security
-
-- JWT-based authentication
-- Password hashing using bcrypt
-- Role-based authorization
-- Protected API routes
-- PIN-protected customer galleries
-- Environment variables for sensitive configuration
-- Cloudinary credentials are stored securely in deployment environment variables
-
-
 ---
 
 # 🔄 Application Workflow
@@ -156,6 +137,14 @@ Customer views published photos
 | Version Control      | GitHub                    |
 
 ---
+# ☁️ Cloud Image Storage
+
+- Cloudinary integration for image storage
+- Secure image URLs
+- Supports JPG, JPEG, PNG, WEBP, and GIF
+- Maximum upload size of 25 MB per image
+- Automatic unique image handling
+
 
 # 🔐 Security
 
