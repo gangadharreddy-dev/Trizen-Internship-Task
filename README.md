@@ -268,7 +268,7 @@ npm run dev
 ## Frontend
 
 ```text
-https://photoshare-frontend.onrender.com/team/dashboard
+https://photoshare-frontend-195k.onrender.com/
 ```
 
 ---
