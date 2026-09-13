@@ -3,7 +3,6 @@
 <img width="2940" height="1912" alt="image" src="https://github.com/user-attachments/assets/ea4b7249-6ee2-4543-991d-936e0c833e16" />
 
 
-
 ### Full-Stack Photography Team & Client Gallery Platform
 
 PhotoShare is a full-stack web application designed for photography teams to upload, organize, review, select, and securely share event photographs with customers.
@@ -12,7 +11,19 @@ The platform provides separate access for **Admins, Team Members, and Customers*
 
 ---
 
+## 🌐 Live Demo
+
+### Frontend
+https://photoshare-frontend-195k.onrender.com/
+
+### Backend API
+https://photoshare-backend-ieke.onrender.com/
+
+### API Documentation
+https://photoshare-backend-ieke.onrender.com/docs
+
 # ✨ Features
+
 
 ## 👨‍💼 Admin
 <img width="2940" height="1912" alt="image" src="https://github.com/user-attachments/assets/441c8ecf-cdad-4be8-8dca-8ccbd72115c2" />
