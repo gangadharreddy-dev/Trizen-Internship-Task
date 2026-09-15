@@ -74,7 +74,7 @@ These accounts are provided for evaluation and demonstration of the PhotoShare a
 ## 🌐 Application Links
 
 **Frontend:**  
-https://photoshare-frontend-195k.onrender.com/
+https://photoshare-frontend.onrender.com
 
 **Backend:**  
 https://photoshare-backend-ieke.onrender.com/
