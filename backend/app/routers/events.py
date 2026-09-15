@@ -35,6 +35,7 @@ def build_event_out(event: Event, db: Session) -> EventOut:
         description=event.description,
         created_by=event.created_by,
         event_date=event.event_date,
+        cover_image_url=event.cover_image_url,
         created_at=event.created_at,
         creator_name=creator_name,
         photo_count=photo_count,
@@ -130,6 +131,8 @@ def update_event(
         event.description = payload.description.strip()
     if payload.event_date is not None:
         event.event_date = payload.event_date
+    if payload.cover_image_url is not None:
+        event.cover_image_url = payload.cover_image_url
 
     db.commit()
     db.refresh(event)

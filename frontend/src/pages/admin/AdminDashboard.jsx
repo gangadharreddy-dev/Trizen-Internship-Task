@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import api from '../../api/client';
+import api, { getPhotoUrl } from '../../api/client';
 import {
   Calendar,
   Image as ImageIcon,
@@ -11,6 +11,26 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+
+// Curated fallback cover images for events that don't have a cover set
+const FALLBACK_COVERS = [
+  'https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80',
+  'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800&q=80',
+  'https://images.unsplash.com/photo-1583939003579-730e3918a45a?w=800&q=80',
+  'https://images.unsplash.com/photo-1520854221256-17451cc331bf?w=800&q=80',
+  'https://images.unsplash.com/photo-1545232979-8bf68ee9b1af?w=800&q=80',
+  'https://images.unsplash.com/photo-1532712938310-34cb3982ef74?w=800&q=80',
+  'https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=800&q=80',
+  'https://images.unsplash.com/photo-1510076857177-7470076d4098?w=800&q=80',
+];
+
+function getEventCoverUrl(event) {
+  if (event.cover_image_url) {
+    return getPhotoUrl(event.cover_image_url);
+  }
+  // Deterministic fallback based on event id
+  return FALLBACK_COVERS[(event.id - 1) % FALLBACK_COVERS.length];
+}
 
 export const AdminDashboard = () => {
   const { user } = useAuth();
@@ -153,20 +173,31 @@ export const AdminDashboard = () => {
               >
                 <div>
                   {/* Event card thumbnail */}
-                  <div className="relative h-44 w-full bg-slate-100 overflow-hidden">
+                  <div className="relative h-44 w-full bg-slate-100 overflow-hidden group/cover">
                     <img
-                      src={
-                        event.id === 1
-                          ? 'https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80'
-                          : 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800&q=80'
-                      }
+                      src={getEventCoverUrl(event)}
                       alt={event.name}
-                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const fb = FALLBACK_COVERS[(event.id - 1) % FALLBACK_COVERS.length];
+                        if (e.target.src !== fb) e.target.src = fb;
+                      }}
+                      className="w-full h-full object-cover group-hover/cover:scale-105 transition-transform duration-300"
                     />
                     {event.is_published && (
                       <span className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-600 text-white shadow-sm">
                         Live Gallery
                       </span>
+                    )}
+                    {/* Hint overlay: click Manage Event to change cover */}
+                    {!event.cover_image_url && (
+                      <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/50 to-transparent py-2 px-3 text-[10px] text-white/80 opacity-0 group-hover/cover:opacity-100 transition-opacity">
+                        Open event → Photos tab to set a cover image
+                      </div>
+                    )}
+                    {event.cover_image_url && (
+                      <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/40 to-transparent py-1.5 px-3 opacity-0 group-hover/cover:opacity-100 transition-opacity">
+                        <span className="text-[10px] text-white/80">✓ Custom cover set</span>
+                      </div>
                     )}
                   </div>
 

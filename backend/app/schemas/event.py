@@ -7,11 +7,13 @@ class EventCreate(BaseModel):
     name: str = Field(..., min_length=2, max_length=200)
     description: Optional[str] = None
     event_date: Optional[datetime] = None
+    cover_image_url: Optional[str] = None
 
 class EventUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=2, max_length=200)
     description: Optional[str] = None
     event_date: Optional[datetime] = None
+    cover_image_url: Optional[str] = None
 
 class EventMemberAdd(BaseModel):
     user_id: Optional[int] = None
@@ -32,6 +34,7 @@ class EventOut(BaseModel):
     description: Optional[str] = None
     created_by: int
     event_date: Optional[datetime] = None
+    cover_image_url: Optional[str] = None
     created_at: datetime
     creator_name: Optional[str] = None
     photo_count: int = 0

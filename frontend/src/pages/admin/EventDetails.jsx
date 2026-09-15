@@ -74,6 +74,19 @@ export const EventDetails = () => {
     }
   };
 
+  const handleSetCover = async (photo, e) => {
+    if (e) e.stopPropagation();
+    try {
+      const res = await api.put(`/api/events/${id}`, {
+        cover_image_url: photo.storage_location,
+      });
+      setEvent(res.data);
+      alert(`✅ Cover image set to "${photo.filename}"`);
+    } catch (err) {
+      alert('Failed to set cover image: ' + (err.response?.data?.detail || err.message));
+    }
+  };
+
   const fetchAll = async () => {
     try {
       setLoading(true);
@@ -519,6 +532,23 @@ export const EventDetails = () => {
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
+
+                    {/* Set as Cover button on hover (bottom) */}
+                    <button
+                      type="button"
+                      onClick={(e) => handleSetCover(photo, e)}
+                      className="absolute bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap px-2.5 py-1 rounded-md bg-slate-900/80 hover:bg-blue-600 text-white text-[10px] font-semibold opacity-0 group-hover:opacity-100 transition-opacity z-10 shadow"
+                      title="Set as event cover image"
+                    >
+                      {event?.cover_image_url === photo.storage_location ? '✓ Current Cover' : '🖼 Set as Cover'}
+                    </button>
+
+                    {/* Cover badge */}
+                    {event?.cover_image_url === photo.storage_location && (
+                      <span className="absolute bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap px-2 py-0.5 rounded-full bg-blue-600 text-white text-[9px] font-bold shadow z-10 group-hover:opacity-0 transition-opacity">
+                        COVER
+                      </span>
+                    )}
                   </div>
                 );
               })}

@@ -11,6 +11,7 @@ class Event(Base):
     description = Column(Text, nullable=True)
     created_by = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     event_date = Column(DateTime, nullable=True)
+    cover_image_url = Column(String(1000), nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
