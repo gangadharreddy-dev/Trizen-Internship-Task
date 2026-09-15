@@ -11,8 +11,45 @@ from app.database import Base, engine, get_db
 from app.models.photo import Photo, PhotoBlob
 from app.routers import auth_router, events_router, photos_router, galleries_router
 
-# Initialize database schema
+# Initialize database schema (creates new tables, does NOT alter existing ones)
 Base.metadata.create_all(bind=engine)
+
+
+def run_migrations():
+    """
+    Safely apply incremental schema changes to existing tables.
+    Uses IF NOT EXISTS so these are idempotent and safe to run on every startup.
+    Works for both SQLite (dev) and PostgreSQL (Render production).
+    """
+    is_sqlite = engine.dialect.name == "sqlite"
+    with engine.connect() as conn:
+        if is_sqlite:
+            # SQLite: check via PRAGMA and conditionally add
+            columns = [row[1] for row in conn.execute(
+                __import__('sqlalchemy').text("PRAGMA table_info(events)")
+            ).fetchall()]
+            if "cover_image_url" not in columns:
+                conn.execute(__import__('sqlalchemy').text(
+                    "ALTER TABLE events ADD COLUMN cover_image_url VARCHAR(1000)"
+                ))
+            if "cover_image_url" not in [row[1] for row in conn.execute(
+                __import__('sqlalchemy').text("PRAGMA table_info(photo_blobs)")
+            ).fetchall()]:
+                pass  # photo_blobs created fresh via create_all
+        else:
+            # PostgreSQL: fully idempotent ALTER TABLE ... IF NOT EXISTS
+            from sqlalchemy import text
+            conn.execute(text(
+                "ALTER TABLE events ADD COLUMN IF NOT EXISTS cover_image_url VARCHAR(1000)"
+            ))
+            conn.execute(text(
+                "ALTER TABLE photo_blobs ADD COLUMN IF NOT EXISTS mime_type VARCHAR(100) DEFAULT 'image/jpeg'"
+            ))
+        conn.commit()
+
+
+run_migrations()
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
