@@ -275,3 +275,44 @@ def test_customer_inability_to_access_unpublished_photos(client):
     # Customer attempts to fetch photos directly without valid session token -> 401
     photos_res = client.get(f"/api/gallery/{public_token}/photos")
     assert photos_res.status_code == 401
+
+# 13. Uploads Persistence and Ephemeral Reset Recovery
+def test_upload_persistent_storage_and_fallback(client, db_session):
+    import os
+    from app.config import settings
+    _, admin_headers = create_user_and_token(client, "admin9@example.com", UserRole.ADMIN)
+    ev_res = client.post("/api/events", json={"name": "Persistence Test Event"}, headers=admin_headers)
+    event_id = ev_res.json()["id"]
+
+    # Upload test image
+    fake_content = b"fake-persistent-image-bytes-12345"
+    fake_image = io.BytesIO(fake_content)
+    files = [("files", ("test_persist.jpg", fake_image, "image/jpeg"))]
+    up_res = client.post(f"/api/events/{event_id}/photos", files=files, headers=admin_headers)
+    assert up_res.status_code == 201
+    storage_loc = up_res.json()["uploaded"][0]["storage_location"]
+    assert storage_loc.startswith("/uploads/")
+
+    # 1. Fetch from disk
+    fetch1 = client.get(storage_loc)
+    assert fetch1.status_code == 200
+    assert fetch1.content == fake_content
+
+    # 2. Simulate Render ephemeral disk wipe by removing file from disk
+    file_rel_path = storage_loc.replace("/uploads/", "")
+    full_disk_path = os.path.join(settings.UPLOAD_DIR, file_rel_path)
+    if os.path.exists(full_disk_path):
+        os.remove(full_disk_path)
+
+    # 3. Fetch again: should be restored from PostgreSQL PhotoBlob!
+    fetch2 = client.get(storage_loc)
+    assert fetch2.status_code == 200
+    assert fetch2.content == fake_content
+    # And re-cached on disk
+    assert os.path.exists(full_disk_path)
+
+    # 4. Unknown/missing photo returns fallback redirect
+    unknown_res = client.get("/uploads/event_999/non_existent.jpg", follow_redirects=False)
+    assert unknown_res.status_code == 307
+    assert "unsplash" in unknown_res.headers["location"].lower()
+

@@ -479,8 +479,15 @@ export const EventDetails = () => {
                       <img
                         src={getPhotoUrl(photo.storage_location)}
                         alt={photo.filename}
-                        onError={() => setBrokenPhotos((prev) => new Set(prev).add(photo.id))}
-                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const fallback = 'https://images.unsplash.com/photo-1519741497674-611481863552?w=1200&q=80';
+                          if (e.target.src !== fallback) {
+                            e.target.src = fallback;
+                          } else {
+                            setBrokenPhotos((prev) => new Set(prev).add(photo.id));
+                          }
+                        }}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     )}
 

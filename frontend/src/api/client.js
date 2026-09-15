@@ -4,8 +4,11 @@ const isDev =
   typeof window !== 'undefined' &&
   (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
+const defaultBackendUrl = isDev ? 'http://127.0.0.1:8000' : 'https://photoshare-backend.onrender.com';
+export const BACKEND_URL = (import.meta.env.VITE_API_URL || defaultBackendUrl).replace(/\/$/, '');
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || (isDev ? 'http://127.0.0.1:8000' : ''),
+  baseURL: BACKEND_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -41,10 +44,6 @@ api.interceptors.response.use(
 
 export default api;
 
-// Backend base URL (used to resolve local /uploads paths)
-export const BACKEND_URL =
-  import.meta.env.VITE_API_URL || (isDev ? 'http://127.0.0.1:8000' : '');
-
 /**
  * Resolves a photo's storage_location to a fully qualified URL.
  * - External URLs (http/https) are returned as-is.
@@ -55,5 +54,6 @@ export function getPhotoUrl(storageLocation) {
   if (storageLocation.startsWith('http://') || storageLocation.startsWith('https://')) {
     return storageLocation;
   }
-  return `${BACKEND_URL}${storageLocation}`;
+  const cleanPath = storageLocation.startsWith('/') ? storageLocation : `/${storageLocation}`;
+  return `${BACKEND_URL}${cleanPath}`;
 }

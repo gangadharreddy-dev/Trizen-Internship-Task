@@ -1,6 +1,6 @@
 from app.models.user import User, UserRole
 from app.models.event import Event, EventMember
-from app.models.photo import Photo
+from app.models.photo import Photo, PhotoBlob
 from app.models.gallery import Gallery, GalleryPhoto
 
 __all__ = [
@@ -9,6 +9,7 @@ __all__ = [
     "Event",
     "EventMember",
     "Photo",
+    "PhotoBlob",
     "Gallery",
     "GalleryPhoto"
 ]

@@ -72,6 +72,12 @@ export const PhotoModal = ({ photo, onClose, onPrev, onNext, hasPrev, hasNext })
         <img
           src={getPhotoUrl(photo.storage_location)}
           alt={photo.filename}
+          onError={(e) => {
+            const fallback = 'https://images.unsplash.com/photo-1519741497674-611481863552?w=1200&q=80';
+            if (e.target.src !== fallback) {
+              e.target.src = fallback;
+            }
+          }}
           className="max-h-full max-w-full object-contain rounded-lg shadow-2xl"
         />
 

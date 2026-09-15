@@ -1,6 +1,6 @@
 import os
 import uuid
-from typing import Tuple
+from typing import Tuple, Optional
 from fastapi import UploadFile, HTTPException, status
 import cloudinary
 import cloudinary.uploader
@@ -25,10 +25,10 @@ if (
     )
     cloudinary_configured = True
 
-async def upload_image_file(file: UploadFile, event_id: int) -> Tuple[str, int]:
+async def upload_image_file(file: UploadFile, event_id: int) -> Tuple[str, int, Optional[bytes]]:
     """
     Validates and uploads an image file.
-    Returns a tuple of: (storage_location_url, file_size_in_bytes)
+    Returns a tuple of: (storage_location_url, file_size_in_bytes, file_bytes_if_local)
     """
     # 1. Validate file extension
     original_filename = file.filename or "unknown"
@@ -71,7 +71,7 @@ async def upload_image_file(file: UploadFile, event_id: int) -> Tuple[str, int]:
                 resource_type="image"
             )
             secure_url = response.get("secure_url") or response.get("url")
-            return secure_url, file_size
+            return secure_url, file_size, None
         except Exception as e:
             # If Cloudinary fails, raise appropriate error
             raise HTTPException(
@@ -90,4 +90,4 @@ async def upload_image_file(file: UploadFile, event_id: int) -> Tuple[str, int]:
 
     # Serve through backend /uploads URL
     relative_url = f"/uploads/event_{event_id}/{unique_filename}"
-    return relative_url, file_size
+    return relative_url, file_size, contents

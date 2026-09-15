@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.user import User, UserRole
 from app.models.event import Event, EventMember
-from app.models.photo import Photo
+from app.models.photo import Photo, PhotoBlob
 from app.schemas.photo import PhotoOut, PhotoSelectionUpdate, BulkUploadResponse
 from app.auth.dependencies import get_current_user, require_admin
 from app.services.storage import upload_image_file
@@ -51,7 +51,7 @@ async def upload_event_photos(
 
     for file in files:
         try:
-            storage_url, file_size = await upload_image_file(file, event_id)
+            storage_url, file_size, file_bytes = await upload_image_file(file, event_id)
             photo = Photo(
                 event_id=event_id,
                 uploaded_by=current_user.id,
@@ -62,6 +62,15 @@ async def upload_event_photos(
             )
             db.add(photo)
             db.flush()
+
+            if file_bytes:
+                blob = PhotoBlob(
+                    photo_id=photo.id,
+                    image_data=file_bytes,
+                    mime_type=file.content_type or "image/jpeg"
+                )
+                db.add(blob)
+
             uploaded_photos.append(photo)
         except Exception as e:
             failed_uploads.append(f"{file.filename or 'file'}: {str(e)}")
