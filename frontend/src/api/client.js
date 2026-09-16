@@ -4,7 +4,7 @@ const isDev =
   typeof window !== 'undefined' &&
   (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
-const defaultBackendUrl = isDev ? 'http://127.0.0.1:8000' : 'https://photoshare-backend.onrender.com';
+const defaultBackendUrl = isDev ? 'http://127.0.0.1:8000' : 'https://photoshare-backend-ieke.onrender.com';
 export const BACKEND_URL = (import.meta.env.VITE_API_URL || defaultBackendUrl).replace(/\/$/, '');
 
 const api = axios.create({
